@@ -2,6 +2,8 @@ from scapy.all import *
 import time
 import threading
 
+lst = list()
+
 class session(object):
     '''
     This class will hold us, a session connection
@@ -28,7 +30,7 @@ class session(object):
         self.combined       = list((packet, 0))
         self.session_info   = session_info
         self.start_time     = time.time()
-        self.got_fin        = False
+        self.protocol = session_info[4]
 
     # to check if the session ends
     def check_if_got_fin(self, packet):
@@ -52,7 +54,8 @@ class session(object):
             self.income.append((packet, time_now - self.start_time))
 
         # if we got fin ack we can send it to ML to detect if correct
-        self.got_fin = self.check_if_got_fin(packet)
+        if self.check_if_got_fin(packet) == True:
+            lst.append(self)
 
         # unlock the lock
         self.lock.release()

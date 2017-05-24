@@ -27,10 +27,8 @@ class Sniffer(object):
 
 
     def make_stemp(self,pkt):
-
-        if IP in pkt:
-            ip_send  = pkt[IP].src
-            ip_rec   = pkt[IP].dst
+        ip_send = pkt[IP].src
+        ip_rec = pkt[IP].dst
 
         if TCP in pkt:
             port_send = pkt[TCP].sport
