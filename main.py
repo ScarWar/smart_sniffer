@@ -1,5 +1,6 @@
 import s_sniffer
 import threading
+from session_class import *
 
 sniffer = s_sniffer.sniffer()
 
@@ -10,7 +11,9 @@ def sniffer_run():
 
 
 def is_good(session):
-    pass
+    if session is None:
+        return True
+    return True
 
 
 def show_result():
@@ -19,11 +22,11 @@ def show_result():
 
 def ml_classifier():
     while True:
-        while (len(lst) == 0):
+        while len(lst) == 0:
             continue
-        session = list.pop(0)
-        if is_good(session) == False:
-            show_result()
+        sess = lst.pop(0)
+        if is_good(sess) is False:
+            show_result(sess)
 
 
 def main():
