@@ -30,8 +30,8 @@ class S_sniffer(object):
         self.sessions = {}
         self.current_packet = None
         print("Hello everyone this is the Ssniffer")
-        print("This sniffer is much better then any other sniffer beacuse:")
-        print("This sniffer give you a warning if you are trying to reach a malware")
+        print("This sinffer is much better then any other sniffer beacuse:")
+        print("These sniffer give you a warning if you are trying to reach a malware")
         print("Or a malicious hacker trying to reach/hack your computer")
         print("So, thank you for using us and hope we will do a great job")
 
@@ -66,7 +66,7 @@ class S_sniffer(object):
 
     # This function will give us the next packet to check if correct
     def get_and_update_next_packet(self):
-        self.current_packet = sniff(count=1)
+        self.current_packet = S.sniff(count=1)
         packet = self.current_packet
         (IPsrc, PORTsrc, IPdst, PORTdst, proto) = make_stemp(packet)
         stemp = {IPsrc, PORTsrc, IPdst, PORTdst, proto}
