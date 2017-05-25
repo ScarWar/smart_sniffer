@@ -2,7 +2,7 @@ from scapy.all import *
 from pandas import DataFrame
 import sys
 
-mega = 1024**2
+mega = 1024 ** 2
 
 from session_class import Session
 
@@ -123,37 +123,30 @@ class FeatureGetter(object):
     def get_cc_delay_statistics(self):
         for p in self.all_packets:
             pass
-        
-SERVER = ''
-OTHER = ''
-OUT=''
+
 
 SERVER = ''
 OTHER = ''
-OUT=''
+OUT = ''
 
-def data_gen():
-	lst = []
-	for file in os.listdir(input_dir):
-		st = os.stat(file)
-		if st.st_size > 30* mega:
-			continue
-		s = cap_session(file)
-		getter = FeatureGetter(s)
-		lst.append((getter,('malware')))
-		print "mal feat ext. {}".file
 
-	for file in os.listdir(OTHER):
-		st = os.stat(file)
-		if st.st_size > 30* mega:
-			continue
-		s = cap_session(file)
-		getter = FeatureGetter(s)
-		lst.append((getter,('benign')))
-		print "benign feat ext. {}".file
-	df = DataFrame(lst, columns=['features', 'lables'])
-	df.to_csv(OUT)
-	print "Done writting feat."
+def data_gen(input_dir, label, output_file, save=True):
+    lst = []
+    for file in os.listdir(input_dir):
+        st = os.stat(file)
+        data = []
+        target = []
+        if st.st_size > 30 * mega:
+            continue
+        s = cap_session(file)
+        getter = FeatureGetter(s)
+        data.append(getter.get_feat())
+        target.append(('malware'))
+        print label + " feat extracted from {}".file
+
+    df = DataFrame(lst, columns=['features', 'lables'])
+    df.to_csv(OUT)
+    print "Done writting feat."
 
 
 def main(argv):
