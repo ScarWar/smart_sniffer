@@ -50,22 +50,23 @@ class session(object):
     def update_session(self, packet):
         time_now = time.time()
 
-        # check if lock available and check it
+        # check if lock availabe and check it
         self.lock.acquire()
 
         self.combined += [(packet, time_now - self.start_time)]
 
-        if packet['IP'].src == self.session_info[0]:
+        if packet[IP].src == self.our_ip:
             self.outcome += [(packet, time_now - self.start_time)]
         else:
             self.income += [(packet, time_now - self.start_time)]
 
         # if we got fin ack we can send it to ML to detect if correct
         # this can be only in tcp
-        if 'TCP' in packet:
+        if TCP in packet:
             self.got_fin = self.check_if_got_fin(packet)
         else:
             self.got_fin = True
 
         # unlock the lock
         self.lock.release()
+
