@@ -8,16 +8,17 @@ def get_n_full(packets):
     cnt = 0
     for p in packets:
         # ip = p[0].getlayer(S.IP)
-        if p.len == 1514:  # max len of packet
-            cnt += 1
+        print p[0]
+        # if p.len == 1514:  # max len of packet
+        #     cnt += 1
     return cnt
 
 
 def get_lens_per_sec(packets):
     total = 0
     for x in packets:
-        total += x.len
-    time_dif = x[-1] - x[0]
+        total += x[0].len
+    time_dif = packets[-1][0] - packets[0][0]
     return total / time_dif
 
 
@@ -40,13 +41,11 @@ def cap_session(pcap_path):
     curr_session = None
     session_info = [0, ] * 5
     for packet in capture:
-
         if not packet.haslayer(TCP) and not packet.haslayer(IP) and packet.len <= 0:
             pass
 
         if first:
             first = False
-
             if is_client(packet):
                 session_info[0] = packet[IP].src
                 session_info[1] = packet[IP].dst
@@ -54,7 +53,6 @@ def cap_session(pcap_path):
                 curr_session = session(packet, session_info, session_info[0])
             else:
                 return None
-
         else:
             curr_session.update_session(packet)
 
@@ -76,7 +74,7 @@ class FeatureGetter(object):
         self.out_pkt = session.outcome
 
     def get_feat(self):
-        proto = (self.session.protocol == "TCP")
+        proto = self.session.session_info[4] == "TCP"
         # first_pkt = self.all_packets[0] #the one who started the tcp connection
         # starter = first_pkt.getlayer(S.IP).src
 

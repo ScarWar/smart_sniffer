@@ -3,8 +3,6 @@ from scapy.all import *
 import session_class
 
 
-# FILE_LOGGER = "./Ssniffer_logger.log"
-
 class Sniffer(object):
     """
     The sniffer smart sniffer that will
@@ -24,7 +22,7 @@ class Sniffer(object):
     def get_sessions(self):
         return self.sessions
 
-    def make_stemp(self, pkt):
+    def make_stamp(self, pkt):
 
         if IP in pkt:
             ip_send = pkt[IP].src
@@ -50,18 +48,19 @@ class Sniffer(object):
         else:
             return None  # if not TCP or UDP or ICMP
 
-        return (ip_send, ip_rec, port_send, port_rec, protocol)
+        return ip_send, ip_rec, port_send, port_rec, protocol
 
     def set_session(self, packet, stemp, our_ip):
         self.sessions[stemp] = session_class.session(packet, stemp, our_ip)
 
-    def decide_stemp(self, five_tuple, John):
+    def decide_stamp(self, five_tuple):
+        isLeft = False
         if self.our_ip != str(five_tuple[0]):
             temp1, temp2 = five_tuple[1], five_tuple[3]
             five_tuple[1], five_tuple[3] = five_tuple[0], five_tuple[2]
             five_tuple[0], five_tuple[2] = temp1, temp2
-            John += 1
-        return tuple(five_tuple)
+            isLeft = True
+        return tuple(five_tuple), isLeft
 
     # This function will give us the next packet to check if correct
     def update_next_packet(self):
@@ -77,17 +76,16 @@ class Sniffer(object):
         if ip_send != self.our_ip and ip_rec != self.our_ip:
             return
         print packet.summary()
-        if self.make_stemp(packet) is not None:
-            John = 0
-            ip_send, ip_rec, port_send, port_rec, protocol = self.make_stemp(packet)
+        if self.make_stamp(packet) is not None:
+            ip_send, ip_rec, port_send, port_rec, protocol = self.make_stamp(packet)
             five_tuple = [ip_send, ip_rec, port_send, port_rec, protocol]
 
-            stemp = self.decide_stemp(five_tuple, John)
+            stamp, john = self.decide_stamp(five_tuple)
 
-            if self.sessions.get(stemp) is None:
-                threading.Thread(target=self.set_session, args=[packet, stemp, self.our_ip]).start()
+            if self.sessions.get(stamp) is None:
+                threading.Thread(target=self.set_session, args=[packet, stamp, self.our_ip]).start()
             else:
-                threading.Thread(target=self.sessions[stemp].update_session, args=[packet, John]).start()
+                threading.Thread(target=self.sessions[stamp].update_session, args=[packet, john]).start()
 
         else:
             print "some kind of error ? None"
