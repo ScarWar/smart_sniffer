@@ -46,7 +46,6 @@ class session(object):
         packet_time = packet.time
 
         # check if lock available and check it
-        self.lock.aquire(blocking=True)
 
         self.combined.append((packet, packet_time - self.start_time))
         if self.session_info[0] == self.our_ip:
@@ -59,5 +58,4 @@ class session(object):
             lst.append(self)
 
         # unlock the lock
-        self.lock.release()
 
