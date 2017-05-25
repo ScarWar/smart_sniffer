@@ -5,6 +5,34 @@ import session_class
 
 # FILE_LOGGER = "./Ssniffer_logger.log"
 
+def make_stemp(pkt):
+    if IP in pkt:
+        ip_send = pkt[IP].src
+        ip_rec = pkt[IP].dst
+    else:
+        return None
+
+    if TCP in pkt:
+        # port_send = pkt[TCP].sport
+        # port_rec = pkt[TCP].dport
+        protocol = "TCP"
+
+    elif UDP in pkt:
+        # port_send = pkt[UDP].sport
+        # port_rec = pkt[UDP].dport
+        protocol = "UDP"
+
+    elif ICMP in pkt:
+        # port_send = 1  # pkt[ICMP].sport
+        # port_rec = 1  # pkt[ICMP].dport
+        protocol = "ICMP"
+
+    else:
+        return None  # if not TCP or UDP or ICMP
+
+    return ip_send, ip_rec, protocol
+
+
 class Sniffer(object):
     """
     The sniffer smart sniffer that will
@@ -22,43 +50,15 @@ class Sniffer(object):
     def get_sessions(self):
         return self.sessions
 
-    def make_stemp(self, pkt):
-
-        if IP in pkt:
-            ip_send = pkt[IP].src
-            ip_rec = pkt[IP].dst
-        else:
-            return None
-
-        if TCP in pkt:
-            port_send = pkt[TCP].sport
-            port_rec = pkt[TCP].dport
-            protocol = "TCP"
-
-        elif UDP in pkt:
-            port_send = pkt[UDP].sport
-            port_rec = pkt[UDP].dport
-            protocol = "UDP"
-
-        elif ICMP in pkt:
-            port_send = 1  # pkt[ICMP].sport
-            port_rec = 1  # pkt[ICMP].dport
-            protocol = "ICMP"
-
-        else:
-            return None  # if not TCP or UDP or ICMP
-
-        return (ip_send, ip_rec, port_send, port_rec, protocol)
-
     def set_session(self, packet, stemp, our_ip):
-        self.sessions[stemp] = session_class.session(packet, stemp, our_ip)
+        self.sessions[stemp] = session_class.Session(packet, stemp, our_ip)
 
-    def decide_stemp(self, five_tuple):
-        if self.our_ip != str(five_tuple[0]):
-            temp1, temp2 = five_tuple[1], five_tuple[3]
-            five_tuple[1], five_tuple[3] = five_tuple[0], five_tuple[2]
-            five_tuple[0], five_tuple[2] = temp1, temp2
-        return tuple(five_tuple)
+    def decide_stemp(self, three_tuple):
+        if self.our_ip != str(three_tuple[0]):
+            temp1 = three_tuple[1]
+            three_tuple[1] = three_tuple[0]
+            three_tuple[0] = temp1
+        return tuple(three_tuple)
 
     # This function will give us the next packet to check if correct
     def update_next_packet(self):
@@ -74,16 +74,19 @@ class Sniffer(object):
         if ip_send != self.our_ip and ip_rec != self.our_ip:
             return
         print packet.summary()
-        if self.make_stemp(packet) is not None:
-            ip_send, ip_rec, port_send, port_rec, protocol = self.make_stemp(packet)
-            five_tuple = [ip_send, ip_rec, port_send, port_rec, protocol]
+        if make_stemp(packet) is not None:
+            ip_send, ip_rec, protocol = make_stemp(packet)
+            three_tuple = [ip_send, ip_rec, protocol]
 
-            stemp = self.decide_stemp(five_tuple)
+            stemp = self.decide_stemp(three_tuple)
 
             if self.sessions.get(stemp) is None:
                 threading.Thread(target=self.set_session, args=[packet, stemp, self.our_ip]).start()
             else:
                 threading.Thread(target=self.sessions[stemp].update_session, args=[packet]).start()
 
+                if self.sessions[stemp].got_fin is True:
+                    to_add = self.sessions.pop(stemps)
+                    lst.add(to_add)
         else:
             print "some kind of error ? None"
