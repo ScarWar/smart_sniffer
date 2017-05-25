@@ -105,7 +105,7 @@ def get_max_delay(session, our_ip):
         pkt_tuple = session.combined[i]
         prev = curr
         curr = pkt_tuple
-        if curr[1] - prev[1] > 0.5:
+        if curr[1] - prev[1] > 0.2:
             if curr[0][IP].src == our_ip:
                 cnt_c += 1
             else:

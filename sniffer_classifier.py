@@ -68,7 +68,7 @@ class SnifferClassifier(object):
 
     def check_if_malware(self, data, show_prob=False):
         # Calculate prediction
-        predict = self.clf.predict([data])
+        predict = self.clf.predict(data)
         is_malware = False
 
         if 0 != predict[0]:  # if the predictions is malware set flag to True
@@ -76,7 +76,7 @@ class SnifferClassifier(object):
 
         if show_prob:  #
             # Calculate probability
-            predict_prob = self.clf.predict_proba(data)
+            predict_prob = self.clf.predict_proba([data])
 
             for i in range(len(self.target_names)):
                 print self.target_names[i] + " with probability of " + str(predict_prob[i][0])
@@ -123,7 +123,6 @@ class SnifferClassifier(object):
         graph.write_pdf(file_name + ".pdf")
         print "Decision graph created"
 
-    def generate_confusion_matrix(self, data, target, truth):
-        classifier = self.clf.fit(data, target)
-        pred = classifier.predict([data])
+    def generate_confusion_matrix(self, data, truth):
+        pred = self.clf.predict(data)
         return confusion_matrix(truth, pred)
