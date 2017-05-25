@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/smart_sniffer.iml" filepath="$PROJECT_DIR$/.idea/smart_sniffer.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/Smart Sniffer.iml" filepath="$PROJECT_DIR$/.idea/Smart Sniffer.iml" />
     </modules>
   </component>
 </project>
