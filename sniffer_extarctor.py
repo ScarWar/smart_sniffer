@@ -1,5 +1,8 @@
 from scapy.all import *
+from pandas import DataFrame
 import sys
+
+mega = 1024**2
 
 from session_class import Session
 
