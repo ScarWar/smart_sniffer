@@ -28,7 +28,7 @@ def select_bin(x, lower_value, upper_value, n_bins=10):
     return None
 
 
-def split_data2traing_and_test(data, target, test_size=0.33):
+def split_data2traning_and_test(data, target, test_size=0.33):
     """
     :param test_size: float between 0.0 and 1.0
     :param data: input
