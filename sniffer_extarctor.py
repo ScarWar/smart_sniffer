@@ -2,7 +2,7 @@ from scapy.all import *
 from pandas import DataFrame
 import sys
 from session_class import Session
-
+from multiprocessing import Pool
 mega = 1024 ** 2
 
 
@@ -176,19 +176,28 @@ OTHER = ''
 OUT = ''
 
 
+def Yoni_Processes(input_dir, file):
+    st = os.stat(input_dir + "/" + file)
+    target = []
+    if st.st_size > 30 * mega:
+        return None
+    s = cap_session(input_dir + "/" + file)
+    getter = FeatureGetter(s)
+    return list(getter.get_feat()) + [label]
+
+
 def data_gen(input_dir, label, output_file, save=True):
     lst = []
     data = []
-    for file in os.listdir(input_dir):
-        st = os.stat(input_dir + "/" + file)
-        target = []
-        if st.st_size > 30 * mega:
-            continue
-        s = cap_session(input_dir + "/" + file)
-        getter = FeatureGetter(s)
-        data.append(list(getter.get_feat()) + [label])
-
-        print label + " feat extracted from %s" % file
+    with Pool(10) as pool:
+        jobs = []
+        for file in os.listdir(input_dir):
+            jobs.append(pool.apply_async(Yoni_Processes, (input_dir, file, label)))
+        for job in jobs:
+            result = job.get()
+            if result:
+                data.append(result)
+                print "feat extracted from %s" % result[-1]
 
     df = DataFrame(data)
     if save:
