@@ -109,15 +109,20 @@ SERVER = ''
 OTHER = ''
 OUT=''
 
+SERVER = ''
+OTHER = ''
+OUT=''
+
 def data_gen():
 	lst = []
-	for file in os.listdir(SERVER):
+	for file in os.listdir(input_dir):
 		st = os.stat(file)
 		if st.st_size > 30* mega:
 			continue
 		s = cap_session(file)
 		getter = FeatureGetter(s)
 		lst.append((getter,('malware')))
+		print "mal feat ext. {}".file
 
 	for file in os.listdir(OTHER):
 		st = os.stat(file)
@@ -126,8 +131,10 @@ def data_gen():
 		s = cap_session(file)
 		getter = FeatureGetter(s)
 		lst.append((getter,('benign')))
+		print "benign feat ext. {}".file
 	df = DataFrame(lst, columns=['features', 'lables'])
 	df.to_csv(OUT)
+	print "Done writting feat."
 
 
 def main(argv):
