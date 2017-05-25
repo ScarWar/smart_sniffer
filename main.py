@@ -1,11 +1,17 @@
 import s_sniffer
 import threading
+import collections
 from session_class import *
 from sniffer_classifier import *
 from sniffer_extarctor import *
 
 sniffer = s_sniffer.sniffer()
 Classifier_Path = "classifier.txt"
+
+
+def filter_retransmissions(pkt_list):
+    seen = set()
+    return [x for x in pkt_list if x[0]['TCP'].seq not in seen and not seen.add(x[0]['TCP'].seq)]
 
 
 def sniffer_run():
@@ -28,6 +34,9 @@ def ml_classifier():
         while len(lst) == 0:
             continue
         sess = lst.pop(0)
+        sess.income = filter_retransmissions(sess.income)
+        sess.outcome = filter_retransmissions(sess.outcome)
+        sess.combined = filter_retransmissions(sess.combined)
         features = FeatureGetter(sess)
         if calssifier.check_if_malware(features.get_feat()) is False:
             show_result(sess)
