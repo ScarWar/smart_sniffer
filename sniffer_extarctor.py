@@ -101,6 +101,30 @@ class FeatureGetter(object):
     def get_cc_delay_statistics(self):
         for p in self.all_packets:
             pass
+        
+SERVER = ''
+OTHER = ''
+OUT=''
+
+def data_gen():
+	lst = []
+	for file in os.listdir(SERVER):
+		st = os.stat(file)
+		if st.st_size > 30* mega:
+			continue
+		s = cap_session(file)
+		getter = FeatureGetter(s)
+		lst.append((getter,('malware')))
+
+	for file in os.listdir(OTHER):
+		st = os.stat(file)
+		if st.st_size > 30* mega:
+			continue
+		s = cap_session(file)
+		getter = FeatureGetter(s)
+		lst.append((getter,('benign')))
+	df = DataFrame(lst, columns=['features', 'lables'])
+	df.to_csv(OUT)
 
 
 def main(argv):
