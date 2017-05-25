@@ -21,7 +21,7 @@ def show_result(pkt):
 
 
 def ml_classifier():
-    classifier = SnifferClassifier(["prot", "fpackets_s", "fpackets_c", "data_per_time_c", "data_per_timer_s"],
+    classifier = SnifferClassifier(["prot", "fpackets_s", "fpackets_c", "data_per_time_c", "data_per_timer_s", "delay"],
                                    ["malware", "benign"])  # need to ask Arik what you give
     classifier.load(Classifer_Path)
     while True:
