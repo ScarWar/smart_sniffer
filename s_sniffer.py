@@ -85,8 +85,13 @@ class Sniffer(object):
             else:
                 threading.Thread(target=self.sessions[stemp].update_session, args=[packet]).start()
 
+                # in case we done working on connection
+                # we will order by time and add to global list
                 if self.sessions[stemp].got_fin is True:
                     to_add = self.sessions.pop(stemps)
+                    sorted(to_add.income, key=lambda x: x[1])
+                    sorted(to_add.outcome, key=lambda x: x[1])
+                    sorted(to_add.combined, key=lambda x: x[1])
                     lst.add(to_add)
         else:
             print "some kind of error ? None"
