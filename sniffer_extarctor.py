@@ -1,7 +1,7 @@
 from scapy.all import *
 import sys
 
-from session_class import session
+from session_class import Session
 
 
 def get_n_big(packets):
@@ -61,7 +61,7 @@ def cap_session(pcap_path):
                 session_info[0] = packet[IP].src
                 session_info[1] = packet[IP].dst
                 session_info[4] = "TCP"
-                curr_session = session(packet, session_info, session_info[0])
+                curr_session = Session(packet, session_info, session_info[0])
             else:
                 return None
         else:

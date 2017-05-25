@@ -51,7 +51,7 @@ class Sniffer(object):
         return self.sessions
 
     def set_session(self, packet, stemp, our_ip):
-        self.sessions[stemp] = session_class.session(packet, stemp, our_ip)
+        self.sessions[stemp] = session_class.Session(packet, stemp, our_ip)
 
     def decide_stemp(self, three_tuple):
         if self.our_ip != str(three_tuple[0]):

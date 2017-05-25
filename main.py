@@ -19,6 +19,7 @@ def show_result(pkt):
     if x == 'y':
         print pkt
 
+
 def ml_classifier():
     classifier = SnifferClassifier(["prot", "fpackets_s", "fpackets_c", "data_per_time_c", "data_per_timer_s"],
                                    ["malware", "benign"])  # need to ask Arik what you give

@@ -13,14 +13,14 @@ def check_if_got_fin(packet):
     return False
 
 
-class session(object):
-    '''
+class Session(object):
+    """
     This class will hold us, a session connection
     and will update (from given packet) and enter
     the new packet to the session and check if it
     is a FIN packets, if so it says that the socket
     Done
-    '''
+    """
 
     # lock - no one will change us
     # input - packets that our IP recived
