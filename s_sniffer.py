@@ -77,7 +77,7 @@ class Sniffer(object):
         if ip_send != self.our_ip and ip_rec != self.our_ip:
             return
         print packet.summary()
-        if self.make_stemp(packet) != None:
+        if self.make_stemp(packet) is not None:
             John = 0
             ip_send, ip_rec, port_send, port_rec, protocol = self.make_stemp(packet)
             five_tuple = [ip_send, ip_rec, port_send, port_rec, protocol]
