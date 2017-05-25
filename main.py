@@ -4,9 +4,19 @@ import collections
 from session_class import *
 from sniffer_classifier import *
 from sniffer_extarctor import *
+from session_class import lst
+import socket
 
-sniffer = s_sniffer.sniffer()
-Classifier_Path = "classifier.txt"
+
+def get_my_ip():
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    s.connect(("8.8.8.8", 80))
+    print(s.getsockname()[0])
+    s.close()
+
+
+sniffer = s_sniffer.Sniffer(get_my_ip())
+Classifier_Path = "RandomForest.clf"
 
 
 def filter_retransmissions(pkt_list):
@@ -27,9 +37,19 @@ def show_result(pkt):
 
 
 def ml_classifier():
-    classifier = SnifferClassifier(["prot", "fpackets_s", "fpackets_c", "data_per_time_c", "data_per_timer_s", "delay"],
-                                   ["malware", "benign"])  # need to ask Arik what you give
-    classifier.load(Classifer_Path)
+    normlizer_matrix = np.ones([0, 0, 1000, 3000, 300, 0, 0],
+                               [1, 300, 1514, 100000, 100000, 0.5, 2],
+                               [2, 10, 10, 100, 100, 5, 3])  # lower, upper, number of bins
+    classifier = SnifferClassifier([
+        "protocol"
+        "server side packets",
+        "client side packets",
+        "data per sec server",
+        "data per sec client",
+        "average data server",
+        "server delay"],
+        ["malware", "benign"], normalizer_matrix=normlizer_matrix)  # need to ask Arik what you give
+    classifier.load_classifier(Classifier_Path)
     while True:
         while len(lst) == 0:
             continue
@@ -38,14 +58,16 @@ def ml_classifier():
         sess.outcome = filter_retransmissions(sess.outcome)
         sess.combined = filter_retransmissions(sess.combined)
         features = FeatureGetter(sess)
-        if calssifier.check_if_malware(features.get_feat()) is False:
+        if classifier.check_if_malware(features.get_feat) is False:
             show_result(sess)
 
 
 def main():
     threading.Thread(target=sniffer_run()).start()
-    threading.Thread(targer=ml_classifier()).start()
+    threading.Thread(target=ml_classifier()).start()
     print "Press Enter in order to make the sniffer stop"
     raw_input()
 
-# if __name__ == '__main__':
+
+if __name__ == '__main__':
+    main()

@@ -1,16 +1,14 @@
 from scapy.all import *
 from pandas import DataFrame
 import sys
+from session_class import Session
 
 mega = 1024 ** 2
-
-from session_class import Session
 
 
 def get_n_big(packets):
     cnt = 0
     for p in packets:
-        print get_packet_size(p[0])
         if get_packet_size(p[0]) >= 1000:
             cnt += 1
     return cnt
@@ -63,29 +61,61 @@ def is_client(_packet):
     if t.flags & 0x02 and not t.flags & 0x10:
         return True
     tcp = _packet.getlayer(TCP)
-    if tcp.sport > tcp.dport: #if the sport is higher then likely it is the client
-    	return True
+    if tcp.sport > tcp.dport:  # if the sport is higher then likely it is the client
+        return True
     return False
+
+
+# get delay average for session
+def get_delay_average(session, our_ip):
+    cnt_A = 0
+    cnt_B = 0
+    delay_sum_A = 0
+    delay_sum_B = 0
+    curr = session.combined[0]
+    for i in xrange(1, len(session.combined)):
+        pkt_tuple = session.combined[i]
+        prev = curr
+        curr = pkt_tuple
+        if prev[0][IP].src != our_ip and curr[0][IP].src == our_ip and i < len(session.combined) - 1:
+            i += 1  # to skip the
+            pkt_tuple = session.combined[i]
+            prev = curr
+            curr = pkt_tuple
+            while prev[0][IP].src == our_ip and curr[0][IP].src == our_ip and i < len(session.combined):
+                delay_sum_A += (curr[1] - prev[1])
+                i += 1
+                pkt_tuple = session.combined[i]
+                prev = curr
+                curr = pkt_tuple
+                cnt_A += 1
+
+            delay_sum_B += (curr[1] - prev[1])
+            cnt_B += 1
+
+    return delay_sum_A / cnt_A, delay_sum_B / cnt_B
 
 
 def cap_session(pcap_path):
     capture = rdpcap(pcap_path)
     first = True
     curr_session = None
-    session_info = [0, ] * 5
+    session_info = [0, ] * 3
     for packet in capture:
         if not packet.haslayer(TCP) and not packet.haslayer(IP) and packet.len <= 0:
-            pass
-
+            continue
         if first:
             first = False
             if is_client(packet):
                 session_info[0] = packet[IP].src
                 session_info[1] = packet[IP].dst
-                session_info[4] = "TCP"
+                session_info[2] = "TCP"
                 curr_session = Session(packet, session_info, session_info[0])
             else:
-                return None
+                session_info[0] = packet[IP].dst
+                session_info[1] = packet[IP].src
+                session_info[2] = "TCP"
+                curr_session = Session(packet, session_info, session_info[0])
         else:
             curr_session.update_session(packet)
 
@@ -107,22 +137,18 @@ class FeatureGetter(object):
         self.out_pkts = session.outcome
 
     def get_feat(self):
-        proto = self.session.session_info[4] == "TCP"
-        # first_pkt = self.all_packets[0] #the one who started the tcp connection
-        # starter = first_pkt.getlayer(S.IP).src
-
+        if self.session.session_info[2] == "TCP":
+            proto = 1
+        else:
+            proto = 0
         nfull_pkt_s = get_n_small(self.in_pkts)  # number of full packets in the client
         nfull_pkt_c = get_n_big(self.out_pkts)  # number of small packets in the client
         # get max/mean len of packet
         cc_len_sec = get_lens_per_sec(self.in_pkts)
         # get max/mean out_pkt
         cl_len_sec = get_lens_per_sec(self.out_pkts)
-        # max_cc_delay, mean_cc_delay = self.get_cc_delay_statistics()  # use in_pkt
-        return proto, nfull_pkt_c, nfull_pkt_s, cc_len_sec, cl_len_sec
-
-    def get_cc_delay_statistics(self):
-        for p in self.all_packets:
-            pass
+        avrg_c2c, avrg_s2c2s = get_delay_average(self.session, self.session.our_ip)  # use in_pkt
+        return proto, nfull_pkt_c, nfull_pkt_s, cc_len_sec, cl_len_sec, avrg_c2c, avrg_s2c2s
 
 
 SERVER = ''
@@ -132,21 +158,23 @@ OUT = ''
 
 def data_gen(input_dir, label, output_file, save=True):
     lst = []
+    data = []
     for file in os.listdir(input_dir):
-        st = os.stat(file)
-        data = []
+        st = os.stat(input_dir + "/" + file)
         target = []
         if st.st_size > 30 * mega:
             continue
-        s = cap_session(file)
+        s = cap_session(input_dir + "/" + file)
         getter = FeatureGetter(s)
-        data.append(getter.get_feat())
-        target.append(('malware'))
-        print label + " feat extracted from {}".file
+        data.append(list(getter.get_feat()) + [label])
 
-    df = DataFrame(lst, columns=['features', 'lables'])
-    df.to_csv(OUT)
-    print "Done writting feat."
+        print label + " feat extracted from %s" % file
+
+    df = DataFrame(data)
+    if save:
+        df.to_csv(output_file)
+    print "Done writting features"
+    return df
 
 
 def main(argv):

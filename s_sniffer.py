@@ -1,12 +1,13 @@
 import threading
 from scapy.all import *
 import session_class
+from session_class import lst
 
 # FILE_LOGGER = "./Ssniffer_logger.log"
 key_func = lambda x: x[1]
 
 
-def make_stemp(pkt):
+def make_stamp(pkt):
     if IP in pkt:
         ip_send = pkt[IP].src
         ip_rec = pkt[IP].dst
@@ -54,7 +55,7 @@ class Sniffer(object):
     def set_session(self, packet, stemp, our_ip):
         self.sessions[stemp] = session_class.Session(packet, stemp, our_ip)
 
-    def decide_stemp(self, three_tuple):
+    def decide_stamp(self, three_tuple):
         if self.our_ip != str(three_tuple[0]):
             temp1 = three_tuple[1]
             three_tuple[1] = three_tuple[0]
@@ -75,24 +76,24 @@ class Sniffer(object):
         if ip_send != self.our_ip and ip_rec != self.our_ip:
             return
         print packet.summary()
-        if make_stemp(packet) is not None:
-            ip_send, ip_rec, protocol = make_stemp(packet)
+        if make_stamp(packet) is not None:
+            ip_send, ip_rec, protocol = make_stamp(packet)
             three_tuple = [ip_send, ip_rec, protocol]
 
-            stemp = self.decide_stemp(three_tuple)
+            stamp = self.decide_stamp(three_tuple)
 
-            if self.sessions.get(stemp) is None:
-                threading.Thread(target=self.set_session, args=[packet, stemp, self.our_ip]).start()
+            if self.sessions.get(stamp) is None:
+                threading.Thread(target=self.set_session, args=[packet, stamp, self.our_ip]).start()
             else:
-                threading.Thread(target=self.sessions[stemp].update_session, args=[packet]).start()
+                threading.Thread(target=self.sessions[stamp].update_session, args=[packet]).start()
 
                 # in case we done working on connection
                 # we will order by time and add to global list
-                if self.sessions[stemp].got_fin is True:
-                    to_add = self.sessions.pop(stemps)
+                if self.sessions[stamp].got_fin is True:
+                    to_add = self.sessions.pop(stamp)
                     sorted(to_add.income, key=key_func)
                     sorted(to_add.outcome, key=key_func)
                     sorted(to_add.combined, key=key_func)
                     lst.add(to_add)
         else:
-            print "some kind of error ? None"
+            print "[Error] - Shit happens"

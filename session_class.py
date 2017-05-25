@@ -52,7 +52,7 @@ class Session(object):
     def update_session(self, packet):
         time_now = time.time()
 
-        # check if lock availabe and check it
+        # check if lock available and check it
         self.lock.acquire()
 
         self.combined += [(packet, time_now - self.start_time)]

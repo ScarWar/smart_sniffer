@@ -7,23 +7,23 @@ from sklearn.model_selection import train_test_split
 import numpy as np
 
 
-def select_bin(x, lower_value, upper_value, n_bins=10):
+def select_bin(value, lower_value, upper_value, n_bins=10):
     """
-    :type x: float
+    :type value: float
     :type n_bins: integer
     :type upper_value: float
     :type lower_value: float
     """
     assert lower_value <= upper_value
     v = [] * (n_bins - 1)
-    if x <= lower_value:
+    if value <= lower_value:
         return 0
-    if x >= upper_value:
+    if value >= upper_value:
         return n_bins - 1
     for y in xrange(1, n_bins - 2):
         v.append(lower_value + y * (float(lower_value + upper_value)) / n_bins)
     for y in xrange(1, n_bins - 2):
-        if v[y] <= x <= v[y + 1]:
+        if v[y] <= value <= v[y + 1]:
             return y
     return None
 
