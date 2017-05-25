@@ -82,7 +82,7 @@ def get_delay_average(session, our_ip):
             pkt_tuple = session.combined[i]
             prev = curr
             curr = pkt_tuple
-            while prev[0][IP].src == our_ip and curr[0][IP].src == our_ip and i < len(session.combined):
+            while prev[0][IP].src == our_ip and curr[0][IP].src == our_ip and i < len(session.combined) - 1:
                 delay_sum_A += (curr[1] - prev[1])
                 i += 1
                 pkt_tuple = session.combined[i]
@@ -94,6 +94,25 @@ def get_delay_average(session, our_ip):
             cnt_B += 1
 
     return delay_sum_A / cnt_A, delay_sum_B / cnt_B
+
+
+def get_max_delay(session, our_ip):
+    cnt_c = 0
+    cnt_s = 0
+    curr = session.combined[0]
+    for i in xrange(1, len(session.combined)):
+        pkt_tuple = session.combined[i]
+        prev = curr
+        curr = pkt_tuple
+        if curr[1] - prev[1] > 0.5:
+            if curr[0][IP].src == our_ip:
+                cnt_c += 1
+            else:
+                cnt_s += 1
+    total = cnt_c + cnt_s
+    if total == 0:
+        return 0, 0
+    return cnt_c / total, cnt_s / total
 
 
 def cap_session(pcap_path):
@@ -148,7 +167,8 @@ class FeatureGetter(object):
         # get max/mean out_pkt
         cl_len_sec = get_lens_per_sec(self.out_pkts)
         avrg_c2c, avrg_s2c2s = get_delay_average(self.session, self.session.our_ip)  # use in_pkt
-        return proto, nfull_pkt_c, nfull_pkt_s, cc_len_sec, cl_len_sec, avrg_c2c, avrg_s2c2s
+        max_c, max_s = get_max_delay(self.session, self.session.our_ip)
+        return proto, nfull_pkt_c, nfull_pkt_s, cc_len_sec, cl_len_sec, avrg_c2c, avrg_s2c2s, max_c, max_s
 
 
 SERVER = ''

@@ -1,11 +1,14 @@
 import s_sniffer
 import threading
 import collections
+
+import sniffer_classifier
 from session_class import *
 from sniffer_classifier import *
 from sniffer_extarctor import *
 from session_class import lst
 import socket
+import numpy as np
 
 
 def get_my_ip():
@@ -37,18 +40,21 @@ def show_result(pkt):
 
 
 def ml_classifier():
-    normlizer_matrix = np.ones([0, 0, 1000, 3000, 300, 0, 0],
-                               [1, 300, 1514, 100000, 100000, 0.5, 2],
-                               [2, 10, 10, 100, 100, 5, 3])  # lower, upper, number of bins
-    classifier = SnifferClassifier([
+    normlizer_matrix = np.asarray([[0, 0, 1000, 3000, 300, 0, 0, 0, 0],
+                                   [1, 300, 1514, 100000, 100000, 0.5, 2, 1],
+                                   [2, 10, 10, 100, 100, 5, 3, 100, 100]])  # lower, upper, number of bins
+    classifier = sniffer_classifier.SnifferClassifier([
         "protocol"
         "server side packets",
         "client side packets",
         "data per sec server",
         "data per sec client",
         "average data server",
-        "server delay"],
-        ["malware", "benign"], normalizer_matrix=normlizer_matrix)  # need to ask Arik what you give
+        "server delay",
+        "max delay server",
+        "max delay client"],
+        ["malware", "benign"],
+        normalizer_matrix=normlizer_matrix)
     classifier.load_classifier(Classifier_Path)
     while True:
         while len(lst) == 0:
