@@ -16,8 +16,6 @@ class Sniffer(object):
     def __init__(self, our_ip):
         # self.file = open(FILE_LOGGER, "w")
         self.our_ip = our_ip
-        print "our ip is:"
-        print our_ip
         self.current_packet = None
         self.sessions = {}
 
@@ -55,12 +53,11 @@ class Sniffer(object):
     def set_session(self, packet, stemp, our_ip):
         self.sessions[stemp] = session_class.session(packet, stemp, our_ip)
 
-    def decide_stemp(self, five_tuple, John):
+    def decide_stemp(self, five_tuple):
         if self.our_ip != str(five_tuple[0]):
             temp1, temp2 = five_tuple[1], five_tuple[3]
             five_tuple[1], five_tuple[3] = five_tuple[0], five_tuple[2]
             five_tuple[0], five_tuple[2] = temp1, temp2
-            John += 1
         return tuple(five_tuple)
 
     # This function will give us the next packet to check if correct
@@ -78,16 +75,15 @@ class Sniffer(object):
             return
         print packet.summary()
         if self.make_stemp(packet) is not None:
-            John = 0
             ip_send, ip_rec, port_send, port_rec, protocol = self.make_stemp(packet)
             five_tuple = [ip_send, ip_rec, port_send, port_rec, protocol]
 
-            stemp = self.decide_stemp(five_tuple, John)
+            stemp = self.decide_stemp(five_tuple)
 
             if self.sessions.get(stemp) is None:
                 threading.Thread(target=self.set_session, args=[packet, stemp, self.our_ip]).start()
             else:
-                threading.Thread(target=self.sessions[stemp].update_session, args=[packet, John]).start()
+                threading.Thread(target=self.sessions[stemp].update_session, args=[packet]).start()
 
         else:
             print "some kind of error ? None"

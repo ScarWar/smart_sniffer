@@ -47,18 +47,18 @@ class session(object):
         return False
 
     # update the correct session
-    def update_session(self, packet, John):
+    def update_session(self, packet):
         time_now = time.time()
 
         # check if lock availabe and check it
         self.lock.acquire()
 
-        self.combined += (packet, time_now - self.start_time)
+        self.combined += [(packet, time_now - self.start_time)]
 
-        if John == 0:
-            self.outcome += (packet, time_now - self.start_time)
-        elif John == 1:
-            self.income += (packet, time_now - self.start_time)
+        if packet[IP].src == self.our_ip:
+            self.outcome += [(packet, time_now - self.start_time)]
+        else:
+            self.income += [(packet, time_now - self.start_time)]
 
         # if we got fin ack we can send it to ML to detect if correct
         # this can be only in tcp
