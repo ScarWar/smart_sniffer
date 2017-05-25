@@ -2,6 +2,8 @@ import pydotplus as pdp
 from sklearn import tree
 from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier
 from sklearn.externals import joblib
+from sklearn.metrics import confusion_matrix
+from sklearn.model_selection import train_test_split
 import numpy as np
 
 
@@ -24,6 +26,16 @@ def select_bin(x, lower_value, upper_value, n_bins=10):
         if v[y] <= x <= v[y + 1]:
             return y
     return None
+
+
+def split_data2traing_and_test(data, target, test_size=0.33):
+    """
+    :param test_size: float between 0.0 and 1.0
+    :param data: input
+    :param target: output
+    :return: X_train, X_test, y_train, y_test 
+    """
+    return train_test_split(data, target, test_size=test_size)
 
 
 class SnifferClassifier(object):
@@ -110,3 +122,8 @@ class SnifferClassifier(object):
         graph = pdp.graph_from_dot_data(dot_data)
         graph.write_pdf(file_name + ".pdf")
         print "Decision graph created"
+
+    def generate_confusion_matrix(self, data, target, truth):
+        classifier = self.clf.fit(data, target)
+        pred = classifier.predict([data])
+        return confusion_matrix(truth, pred)
