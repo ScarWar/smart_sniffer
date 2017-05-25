@@ -1,19 +1,16 @@
 import s_sniffer
 import threading
 from session_class import *
+from sniffer_classifier import *
+from sniffer_extarctor import *
 
 sniffer = s_sniffer.sniffer()
+Classifier_Path = "classifier.txt"
 
 
 def sniffer_run():
     while True:
         sniffer.update_next_packet()
-
-
-def is_good(session):
-    if session is None:
-        return True
-    return True
 
 
 def show_result(pkt):
@@ -23,11 +20,15 @@ def show_result(pkt):
         print pkt
 
 def ml_classifier():
+    classifier = SnifferClassifier(["prot", "fpackets_s", "fpackets_c", "data_per_time_c", "data_per_timer_s"],
+                                   ["malware", "benign"])  # need to ask Arik what you give
+    classifier.load(Classifer_Path)
     while True:
         while len(lst) == 0:
             continue
         sess = lst.pop(0)
-        if is_good(sess) is False:
+        features = FeatureGetter(sess)
+        if calssifier.check_if_malware(features.get_feat()) is False:
             show_result(sess)
 
 

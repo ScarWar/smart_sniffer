@@ -2,6 +2,16 @@ from scapy.all import *
 import time
 import threading
 
+lst = dict()
+
+
+def check_if_got_fin(packet):
+    FIN = 0x01
+    F = packet["TCP"].flags
+    if F & FIN:
+        return True
+    return False
+
 
 class session(object):
     '''
@@ -38,14 +48,6 @@ class session(object):
         self.start_time = time.time()
         self.got_fin = False
 
-    # to check if the session ends
-    def check_if_got_fin(self, packet):
-        FIN = 0x01
-        F = packet["TCP"].flags
-        if F & FIN:
-            return True
-        return False
-
     # update the correct session
     def update_session(self, packet):
         time_now = time.time()
@@ -63,10 +65,9 @@ class session(object):
         # if we got fin ack we can send it to ML to detect if correct
         # this can be only in tcp
         if TCP in packet:
-            self.got_fin = self.check_if_got_fin(packet)
+            self.got_fin = check_if_got_fin(packet)
         else:
             self.got_fin = True
 
         # unlock the lock
         self.lock.release()
-
