@@ -4,21 +4,32 @@ import sys
 from session_class import session
 
 
-def get_n_full(packets):
+def get_n_big(packets):
     cnt = 0
     for p in packets:
-        # ip = p[0].getlayer(S.IP)
-        print p[0]
-        # if p.len == 1514:  # max len of packet
-        #     cnt += 1
+        print get_packet_size(p[0])
+        if get_packet_size(p[0]) >= 400:
+            cnt += 1
     return cnt
+
+
+def get_n_small(packets):
+    cnt = 0
+    for p in packets:
+        if get_packet_size(p[0]) <= 300:
+            cnt += 1
+    return cnt
+
+
+def get_packet_size(pkt):
+    return len(pkt)
 
 
 def get_lens_per_sec(packets):
     total = 0
-    for x in packets:
-        total += x[0].len
-    time_dif = packets[-1][0] - packets[0][0]
+    for p in packets:
+        total += get_packet_size(p)
+    time_dif = packets[-1][1] - packets[0][1]
     return total / time_dif
 
 
@@ -70,20 +81,20 @@ class FeatureGetter(object):
     def __init__(self, session):
         self.session = session
         self.all_packets = session.combined
-        self.in_pkt = session.income
-        self.out_pkt = session.outcome
+        self.in_pkts = session.income
+        self.out_pkts = session.outcome
 
     def get_feat(self):
         proto = self.session.session_info[4] == "TCP"
         # first_pkt = self.all_packets[0] #the one who started the tcp connection
         # starter = first_pkt.getlayer(S.IP).src
 
-        nfull_pkt_c = get_n_full(self.in_pkt)  # number of full packets in the client
-        nfull_pkt_s = get_n_full(self.out_pkt)  # number of full packets in the client
+        nfull_pkt_s = get_n_small(self.in_pkts)  # number of full packets in the client
+        nfull_pkt_c = get_n_big(self.out_pkts)  # number of small packets in the client
         # get max/mean len of packet
-        cc_len_sec = get_lens_per_sec(self.in_pkt)
+        cc_len_sec = get_lens_per_sec(self.in_pkts)
         # get max/mean out_pkt
-        cl_len_sec = get_lens_per_sec(self.out_pkt)
+        cl_len_sec = get_lens_per_sec(self.out_pkts)
         # max_cc_delay, mean_cc_delay = self.get_cc_delay_statistics()  # use in_pkt
         return proto, nfull_pkt_c, nfull_pkt_s, cc_len_sec, cl_len_sec
 

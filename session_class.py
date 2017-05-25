@@ -53,12 +53,12 @@ class session(object):
         # check if lock available and check it
         self.lock.acquire()
 
-        self.combined += (packet, time_now - self.start_time)
+        self.combined += [(packet, time_now - self.start_time)]
 
         if packet['IP'].src == self.session_info[0]:
-            self.outcome += (packet, time_now - self.start_time)
+            self.outcome += [(packet, time_now - self.start_time)]
         else:
-            self.income += (packet, time_now - self.start_time)
+            self.income += [(packet, time_now - self.start_time)]
 
         # if we got fin ack we can send it to ML to detect if correct
         # this can be only in tcp
