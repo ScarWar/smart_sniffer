@@ -2,8 +2,9 @@ import threading
 from scapy.all import *
 import session_class
 
-
 # FILE_LOGGER = "./Ssniffer_logger.log"
+key_func = lambda x: x[1]
+
 
 def make_stemp(pkt):
     if IP in pkt:
@@ -89,9 +90,9 @@ class Sniffer(object):
                 # we will order by time and add to global list
                 if self.sessions[stemp].got_fin is True:
                     to_add = self.sessions.pop(stemps)
-                    sorted(to_add.income, key=lambda x: x[1])
-                    sorted(to_add.outcome, key=lambda x: x[1])
-                    sorted(to_add.combined, key=lambda x: x[1])
+                    sorted(to_add.income, key=key_func)
+                    sorted(to_add.outcome, key=key_func)
+                    sorted(to_add.combined, key=key_func)
                     lst.add(to_add)
         else:
             print "some kind of error ? None"
