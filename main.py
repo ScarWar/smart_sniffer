@@ -1,5 +1,6 @@
 import s_sniffer
 import threading
+from session_class import *
 
 sniffer = s_sniffer.sniffer()
 
@@ -10,20 +11,24 @@ def sniffer_run():
 
 
 def is_good(session):
-    pass
+    if session is None:
+        return True
+    return True
 
 
-def show_result():
-    pass
-
+def show_result(pkt):
+    print "A transmitted file during the last session may contain harmful software to your computer"
+    x = raw_input("Would you like to see the details of the suspicious packet? (y/n)")
+    if x == 'y':
+        print pkt
 
 def ml_classifier():
     while True:
-        while (len(lst) == 0):
+        while len(lst) == 0:
             continue
-        session = list.pop(0)
-        if is_good(session) == False:
-            show_result()
+        sess = lst.pop(0)
+        if is_good(sess) is False:
+            show_result(sess)
 
 
 def main():
@@ -32,6 +37,4 @@ def main():
     print "Press Enter in order to make the sniffer stop"
     raw_input()
 
-
-if __name__ == '__main__':
-    main()
+# if __name__ == '__main__':

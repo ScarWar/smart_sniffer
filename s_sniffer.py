@@ -1,66 +1,93 @@
 import threading
-from scapy import *
+from scapy.all import *
 import session_class
 
-FILE_LOGGER = "./Ssniffer_logger.log"
 
+# FILE_LOGGER = "./Ssniffer_logger.log"
 
 class Sniffer(object):
     """
-    The Ssniffer smart sniffer that will
+    The sniffer smart sniffer that will
     alert if we got a malware
     """
 
     # This function is to inform that we start using our
-    # Ssniffer to check what is good and bad
-    def __init__(self, ourIP):
-        self.file = open(FILE_LOGGER, "w")
-        self.ourIP = ourIP
+    # sniffer to check what is good and bad
+    def __init__(self, our_ip):
+        # self.file = open(FILE_LOGGER, "w")
+        self.our_ip = our_ip
+        print "our ip is:"
+        print our_ip
         self.current_packet = None
         self.sessions = {}
 
-        # Sexy information about our Ssinffer
-        print "Hello everyone this is the Ssniffer"
-        print "This sinffer is much better then any other sniffer beacuse:"
-        print "These sniffer give you a warning if you are trying to reach a malware"
-        print "Or a malicious hacker trying to reach/hack your computer"
-        print "So, thank you for using us and hope we will do a great job"
+    def get_sessions(self):
+        return self.sessions
 
+    def make_stemp(self, pkt):
 
-def make_stamp(self, pkt):
-    ip_src = pkt[IP].src
-    ip_dst = pkt[IP].dst
+        if IP in pkt:
+            ip_send = pkt[IP].src
+            ip_rec = pkt[IP].dst
+        else:
+            return None
 
-    if TCP in pkt:
-        port_send = pkt[TCP].sport
-        port_rec = pkt[TCP].dport
-        protocol = "TCP"
-    elif UDP in pkt:
-        port_send = pkt[UDP].sport
-        port_rec = pkt[UDP].dport
-        protocol = "UDP"
-    elif ICMP in pkt:
-        port_send = pkt[ICMP].sport
-        port_rec = pkt[ICMP].dport
-        protocol = "ICMP"
-    else:
-        return None  # if not TCP or UDP or ICMP
+        if TCP in pkt:
+            port_send = pkt[TCP].sport
+            port_rec = pkt[TCP].dport
+            protocol = "TCP"
 
-    return ip_src, ip_dst, protocol
+        elif UDP in pkt:
+            port_send = pkt[UDP].sport
+            port_rec = pkt[UDP].dport
+            protocol = "UDP"
 
+        elif ICMP in pkt:
+            port_send = 1  # pkt[ICMP].sport
+            port_rec = 1  # pkt[ICMP].dport
+            protocol = "ICMP"
 
-def set_session(self, packet, stamp):
+        else:
+            return None  # if not TCP or UDP or ICMP
+
+        return (ip_send, ip_rec, port_send, port_rec, protocol)
+
+    def set_session(self, packet, stemp, our_ip):
+        self.sessions[stemp] = session_class.session(packet, stemp, our_ip)
+
+    def decide_stemp(self, five_tuple, John):
+        if self.our_ip != str(five_tuple[0]):
+            temp1, temp2 = five_tuple[1], five_tuple[3]
+            five_tuple[1], five_tuple[3] = five_tuple[0], five_tuple[2]
+            five_tuple[0], five_tuple[2] = temp1, temp2
+            John += 1
+        return tuple(five_tuple)
+
     # This function will give us the next packet to check if correct
-    self.sessions[stamp] = session_class.session(packet, stamp)
+    def update_next_packet(self):
+        packet = sniff(count=1)  # filter = "tcp.len > 0",
+        packet = packet[0]
 
+        if IP not in packet:
+            return
 
-def update_next_packet(self):
-    packet = sniff(filter="tcp.len > 0", count=1)
-    (ip_send, ip_rec, port_send, port_rec) = make_stamp(packet)
-    stamp = set([ip_send, ip_rec, port_send, port_rec])
+        ip_send = packet[IP].src
+        ip_rec = packet[IP].dst
 
+        if ip_send != self.our_ip and ip_rec != self.our_ip:
+            return
+        print packet.summary()
+        if self.make_stemp(packet) is not None:
+            John = 0
+            ip_send, ip_rec, port_send, port_rec, protocol = self.make_stemp(packet)
+            five_tuple = [ip_send, ip_rec, port_send, port_rec, protocol]
 
-if self.sessions.get(stamp) is None:
-    threading.Thread(target=(self.set_sessions()), args={packet, stemp})
-else:
-    threading.Thread(target=self.sessions[stemp].update_session, args={packet}).start()
+            stemp = self.decide_stemp(five_tuple, John)
+
+            if self.sessions.get(stemp) is None:
+                threading.Thread(target=self.set_session, args=[packet, stemp, self.our_ip]).start()
+            else:
+                threading.Thread(target=self.sessions[stemp].update_session, args=[packet, John]).start()
+
+        else:
+            print "some kind of error ? None"
