@@ -46,6 +46,9 @@ def is_client(_packet):
     t = _packet[TCP]
     if t.flags & 0x02 and not t.flags & 0x10:
         return True
+    tcp = _packet.getlayer(TCP)
+    if tcp.sport > tcp.dport: #if the sport is higher then likely it is the client
+    	return True
     return False
 
 
