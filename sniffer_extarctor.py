@@ -8,7 +8,7 @@ def get_n_big(packets):
     cnt = 0
     for p in packets:
         print get_packet_size(p[0])
-        if get_packet_size(p[0]) >= 400:
+        if get_packet_size(p[0]) >= 1000:
             cnt += 1
     return cnt
 
