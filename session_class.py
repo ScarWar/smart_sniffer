@@ -1,17 +1,18 @@
 from scapy.all import *
-import time
 import threading
 
 lst = list()
 
+
 class session(object):
-    '''
+    """
     This class will hold us, a session connection
     and will update (from given packet) and enter
     the new packet to the session and check if it
     is a FIN packets, if so it says that the socket
     Done
-    '''
+    """
+
     # lock - no one will change us
     # input - packets that our IP recived
     # output - packters that we sent
@@ -23,13 +24,13 @@ class session(object):
     # - session_info[3] is port_rec
     # - session_info[4] is protocol of usage
     def __init__(self, packet, session_info, our_ip):
-        self.our_ip         = our_ip
-        self.lock           = threading.Lock()
-        self.income         = list((packet, 0))
-        self.outcome        = list((packet, 0))
-        self.combined       = list((packet, 0))
-        self.session_info   = session_info
-        self.start_time     = time.time()
+        self.our_ip = our_ip
+        self.lock = threading.Lock()
+        self.income = [(packet, 0)]
+        self.outcome = [(packet, 0)]
+        self.combined = [(packet, 0)]
+        self.session_info = session_info
+        self.start_time = packet.time
         self.protocol = session_info[4]
 
     # to check if the session ends
@@ -42,19 +43,19 @@ class session(object):
 
     # update the correct session
     def update_session(self, packet):
-        time_now = time.time()
+        packet_time = packet.time
 
-        # check if lock availabe and check it
-        self.lock.aquire(locking=True)
+        # check if lock available and check it
+        self.lock.aquire(blocking=True)
 
-        self.combined.append((packet, time_now - self.start_time))
+        self.combined.append((packet, packet_time - self.start_time))
         if self.session_info[0] == self.our_ip:
-            self.outcome.append((packet, time_now - self.start_time))
+            self.outcome.append((packet, packet_time - self.start_time))
         elif self.session_info[1] == self.our_ip:
-            self.income.append((packet, time_now - self.start_time))
+            self.income.append((packet, packet_time - self.start_time))
 
         # if we got fin ack we can send it to ML to detect if correct
-        if self.check_if_got_fin(packet) == True:
+        if self.check_if_got_fin(packet):
             lst.append(self)
 
         # unlock the lock
