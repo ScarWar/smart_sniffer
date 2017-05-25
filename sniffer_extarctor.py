@@ -35,6 +35,22 @@ def get_lens_per_sec(packets):
     time_dif = packets[-1][1] - packets[0][1]
     return total / time_dif
 
+def get_max_delay(session, our_ip):
+	cnt_c = 0 
+	cnt_s = 0
+	curr = session.combined[0]
+	for i in xrange(1, len(cut_sessions)):
+		pkt_tuple = cnt_sessions[i]
+		prev = curr
+		curr = pkt_tuple
+		if(curr[1] - prev[1] > 1.3):
+			if(curr[0][IP].src == our_ip):
+				cnt_c += 1
+			else:
+				cnt_s += 1
+
+	return cnt_c, cnt_s
+
 
 def is_client(_packet):
     """
