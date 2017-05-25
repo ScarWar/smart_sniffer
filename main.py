@@ -16,9 +16,11 @@ def is_good(session):
     return True
 
 
-def show_result():
-    pass
-
+def show_result(pkt):
+    print "A transmitted file during the last session may contain harmful software to your computer"
+    x = raw_input("Would you like to see the details of the suspicious packet? (y/n)")
+    if x == 'y':
+        print pkt
 
 def ml_classifier():
     while True:
@@ -35,5 +37,4 @@ def main():
     print "Press Enter in order to make the sniffer stop"
     raw_input()
 
-
-if __name__ == '__main__':
+# if __name__ == '__main__':
