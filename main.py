@@ -3,10 +3,10 @@ import threading
 import collections
 
 import sniffer_classifier
-from sessions import *
+from session import *
 from sniffer_classifier import *
-from sniffer_extarctor import *
-from sessions import lst
+from sniffer_extractor import *
+from session import lst
 import socket
 import numpy as np
 
@@ -40,9 +40,9 @@ def show_result(pkt):
 
 
 def ml_classifier():
-    normlizer_matrix = np.asarray([[0, 0, 1000, 3000, 300, 0, 0, 0, 0],
-                                   [1, 300, 1514, 100000, 100000, 0.5, 2, 1],
-                                   [2, 10, 10, 100, 100, 5, 3, 100, 100]])  # lower, upper, number of bins
+    # normlizer_matrix = np.asarray([[0, 0, 1000, 3000, 300, 0, 0, 0, 0],
+    #                                [1, 300, 1514, 100000, 100000, 0.5, 2, 1],
+    #                                [2, 10, 10, 100, 100, 5, 3, 100, 100]])  # lower, upper, number of bins
     classifier = sniffer_classifier.SnifferClassifier([
         "protocol"
         "server side packets",
@@ -54,7 +54,8 @@ def ml_classifier():
         "max delay server",
         "max delay client"],
         ["malware", "benign"],
-        normalizer_matrix=normlizer_matrix)
+        # normalizer_matrix=normlizer_matrix)
+    )
     classifier.load_classifier(Classifier_Path)
     while True:
         while len(lst) == 0:
@@ -63,7 +64,7 @@ def ml_classifier():
         sess.income = filter_retransmissions(sess.income)
         sess.outcome = filter_retransmissions(sess.outcome)
         sess.combined = filter_retransmissions(sess.combined)
-        features = FeatureGetter(sess)
+        features = SessionFeatureExtractor(sess)
         if classifier.check_if_malware(features.get_feat) is False:
             show_result(sess)
 

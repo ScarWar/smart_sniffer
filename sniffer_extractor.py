@@ -1,9 +1,12 @@
+from numpy import asarray
+
 from scapy.all import *
 from pandas import DataFrame
 import sys
-from sessions import Session
+from session import Session
 from multiprocessing import Pool
-mega = 1024 ** 2
+
+MiB = 1 << 30
 
 
 def get_n_big(packets):
@@ -42,12 +45,12 @@ def get_max_delay(session, our_ip):
         pkt_tuple = session.combined[i]
         prev = curr
         curr = pkt_tuple
-        if curr[1] - prev[1] > 1.3:
+
+        if curr[1] - prev[1] > 1:
             if curr[0][IP].src == our_ip:
                 cnt_c += 1
             else:
                 cnt_s += 1
-
     return cnt_c, cnt_s
 
 
@@ -93,62 +96,46 @@ def get_delay_average(session, our_ip):
 
             delay_sum_B += (curr[1] - prev[1])
             cnt_B += 1
-
-    return delay_sum_A / cnt_A, delay_sum_B / cnt_B
-
-
-def get_max_delay(session, our_ip):
-    cnt_c = 0
-    cnt_s = 0
-    curr = session.combined[0]
-    for i in xrange(1, len(session.combined)):
-        pkt_tuple = session.combined[i]
-        prev = curr
-        curr = pkt_tuple
-        if curr[1] - prev[1] > 0.2:
-            if curr[0][IP].src == our_ip:
-                cnt_c += 1
-            else:
-                cnt_s += 1
-    total = cnt_c + cnt_s
-    if total == 0:
-        return 0, 0
-    return cnt_c / total, cnt_s / total
+    r1 = r2 = 0
+    if cnt_A != 0:
+        r1 = delay_sum_A / cnt_A
+    if cnt_B != 0:
+        r2 = delay_sum_B / cnt_B
+    return r1, r2
 
 
 def cap_session(pcap_path):
-    capture = rdpcap(pcap_path)
+    capture = rdpcap(pcap_path)  # TODO when go live change to session capture
     first = True
     curr_session = None
     session_info = [0, ] * 3
-    for packet in capture:
-        if not packet.haslayer(TCP) and not packet.haslayer(IP) and packet.len <= 0:
+    for pkt in capture:
+        if not pkt.haslayer(TCP) and not pkt.haslayer(IP) and pkt.len <= 0:
             continue
+
         if first:
             first = False
-            if is_client(packet):
-                session_info[0] = packet[IP].src
-                session_info[1] = packet[IP].dst
+            if is_client(pkt):
+                session_info[0] = pkt[IP].src
+                session_info[1] = pkt[IP].dst
                 session_info[2] = "TCP"
-                curr_session = Session(packet, session_info, session_info[0])
+                curr_session = Session(pkt, session_info, session_info[0])
             else:
-                session_info[0] = packet[IP].dst
-                session_info[1] = packet[IP].src
+                session_info[0] = pkt[IP].dst
+                session_info[1] = pkt[IP].src
                 session_info[2] = "TCP"
-                curr_session = Session(packet, session_info, session_info[0])
+                curr_session = Session(pkt, session_info, session_info[0])
         else:
-            curr_session.update_session(packet)
+            curr_session.update_session(pkt)
 
     return curr_session
 
 
-'''
-Simple sniffer
-'''
-
-
-class FeatureGetter(object):
-    """docstring for feature getter """
+class SessionFeatureExtractor(object):
+    """
+        Simple class for extraction of features from pcap files
+        
+    """
 
     def __init__(self, session):
         self.session = session
@@ -157,49 +144,60 @@ class FeatureGetter(object):
         self.out_pkts = session.outcome
 
     def get_feat(self):
-        if self.session.session_info[2] == "TCP":
-            proto = 1
-        else:
-            proto = 0
-        nfull_pkt_s = get_n_small(self.in_pkts)  # number of full packets in the client
-        nfull_pkt_c = get_n_big(self.out_pkts)  # number of small packets in the client
+        # if self.session.session_info[2] == "TCP":
+        #     proto = 1
+        # else:
+        #     proto = 0
+        curr_features = 1
+        n_features = 7
+        # number of full packets in the client
+        num_small_packets_pkt_s = get_n_small(self.in_pkts)
+        print "Extracted " + str(curr_features) + " features out of " + str(n_features)
+
+        # number of small packets in the client
+        num_small_pkt_c = get_n_big(self.out_pkts)
+        curr_features += 1
+        print "Extracted " + str(curr_features) + " features out of " + str(n_features)
+
         # get max/mean len of packet
         cc_len_sec = get_lens_per_sec(self.in_pkts)
+        curr_features += 1
+        print "Extracted " + str(curr_features) + " features out of " + str(n_features)
+
         # get max/mean out_pkt
         cl_len_sec = get_lens_per_sec(self.out_pkts)
-        avrg_c2c, avrg_s2c2s = get_delay_average(self.session, self.session.our_ip)  # use in_pkt
+        curr_features += 1
+        print "Extracted " + str(curr_features) + " features out of " + str(n_features)
+
+        # get average server client delay time
+        avg_c2c, avg_s2c2s = get_delay_average(self.session, self.session.our_ip)  # use in_pkt
+        curr_features += 2
+        print "Extracted " + str(curr_features) + " features out of " + str(n_features)
+
         max_c, max_s = get_max_delay(self.session, self.session.our_ip)
-        return proto, nfull_pkt_c, nfull_pkt_s, cc_len_sec, cl_len_sec, avrg_c2c, avrg_s2c2s, max_c, max_s
+        curr_features += 2
+        print "Extracted " + str(curr_features) + " features out of " + str(n_features)
+
+        return num_small_pkt_c, num_small_packets_pkt_s, cc_len_sec, cl_len_sec, avg_c2c, avg_s2c2s, max_c, max_s
 
 
-SERVER = ''
-OTHER = ''
-OUT = ''
-
-
-def get_features_pcap_file(input_dir, file, label):
-    st = os.stat(input_dir + "/" + file)
-    target = []
-    if st.st_size > 30 * mega:
+def get_features_pcap_file((input_dir, pcap_file, label)):
+    st = os.stat(input_dir + "/" + pcap_file)
+    if st.st_size > 30 * MiB:
         return None
-    s = cap_session(input_dir + "/" + file)
-    getter = FeatureGetter(s)
+    s = cap_session(input_dir + "/" + pcap_file)
+    print "Start extraction from " + pcap_file
+    getter = SessionFeatureExtractor(s)
     return list(getter.get_feat()) + [label]
 
 
 def data_gen(input_dir, label, output_file, save=True):
-    lst = []
-    data = []
-    with Pool(10) as pool:
-        jobs = []
-        for file in os.listdir(input_dir):
-            jobs.append(pool.apply_async(get_features_pcap_file, (input_dir, file, label)))
-        for job in jobs:
-            result = job.get()
-            if result:
-                data.append(result)
-                print "feat extracted from %s" % result[-1]
-
+    pool = Pool(8)
+    func_input = [(input_dir, pcap_file, label) for pcap_file in os.listdir(input_dir)]
+    data = pool.map(get_features_pcap_file, func_input)
+    # pool.close()
+    # pool.join()
+    print "features extracted from %s" % input_dir
     df = DataFrame(data)
     if save:
         df.to_csv(output_file)
@@ -212,7 +210,8 @@ def main(argv):
     if _session is None:
         print 'Shit happens'
         sys.exit(0)
-    getter = FeatureGetter(_session)
+
+    getter = SessionFeatureExtractor(_session)
     print getter.get_feat()
 
 

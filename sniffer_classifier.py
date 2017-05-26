@@ -41,15 +41,17 @@ def split_data2traning_and_test(data, target, test_size=0.33):
 class SnifferClassifier(object):
     """Simple decision tree classifier using AdaBoost"""
 
-    def __init__(self, feature_names, target_names, normalizer_matrix=None):
+    def __init__(self, feature_names, target_names, normalizer_matrix=None,
+                 classifier=RandomForestClassifier(max_depth=3)):
         super(SnifferClassifier, self).__init__()
-        self.clf = RandomForestClassifier()  # DecisionTreeClassifier()
+        self.clf = classifier  # DecisionTreeClassifier()
         self.feature_names = feature_names
         self.target_names = target_names
-        if normalizer_matrix is None:
-            self.normalize_matrix = np.ones((len(feature_names), 3))
-        else:
-            self.normalize_matrix = normalizer_matrix
+        self.normalizer_matrix = normalizer_matrix
+        # if normalizer_matrix is None:
+        #     self.normalize_matrix = np.ones((len(feature_names), 3))
+        # else:
+        #     self.normalize_matrix = normalizer_matrix
 
     def save_classifier(self, file_name):
         joblib.dump(self.clf, file_name)
@@ -94,7 +96,7 @@ class SnifferClassifier(object):
             self.clf = ada_boost
         print "AdaBoost training finished"
 
-    def ada_boost_classifier_err(self, data, target, learning_rate=1, n_estimators=400, score=False):
+    def ada_boost_classifier_err(self, data, target, learning_rate=1, n_estimators=400, show_score=False):
         ada_boost = AdaBoostClassifier(
             base_estimator=self.clf,
             learning_rate=learning_rate,
@@ -102,7 +104,7 @@ class SnifferClassifier(object):
             algorithm="SAMME.R")
         ada_boost.fit(data, target)
         score = ada_boost.score(data, target)
-        if not score:
+        if not show_score:
             print "Fitness score: " + str(score)
         return 1.0 - score
 
@@ -110,15 +112,18 @@ class SnifferClassifier(object):
         shape = data.shape
         for i in xrange(shape[0]):
             for j in xrange(shape[1]):
-                n_v = self.normalize_matrix[j]
+                n_v = self.normalizer_matrix[j]
                 data[i][j] = select_bin(data[i][j], n_v[0], n_v[1], n_v[2])
+        return data
 
     def create_graphviz_file(self, file_name):
-        dot_data = tree.export_graphviz(self.clf, out_file=None,
-                                        feature_names=self.feature_names,
-                                        class_names=self.target_names,
-                                        filled=True, rounded=True,
-                                        special_characters=True)
+        dot_data = tree.export_graphviz(
+            self.clf,
+            out_file=None,
+            feature_names=self.feature_names,
+            class_names=self.target_names,
+            filled=True, rounded=True,
+            special_characters=True)
         graph = pdp.graph_from_dot_data(dot_data)
         graph.write_pdf(file_name + ".pdf")
         print "Decision graph created"

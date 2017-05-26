@@ -1,13 +1,12 @@
 from scapy.all import *
-import time
 import threading
 
 lst = dict()
 
 
-def check_if_got_fin(packet):
+def check_if_got_fin(pkt):
     FIN = 0x01
-    F = packet["TCP"].flags
+    F = pkt["TCP"].flags
     if F & FIN:
         return True
     return False
@@ -15,23 +14,24 @@ def check_if_got_fin(packet):
 
 class Session(object):
     """
-    This class will hold us, a session connection
-    and will update (from given packet) and enter
-    the new packet to the session and check if it
-    is a FIN packets, if so it says that the socket
-    Done
+        This class will hold us, a session connection
+        and will update (from given packet) and enter
+        the new packet to the session and check if it
+        is a FIN packets, if so it says that the socket
+        Done
+    
+        lock - no one will change us
+        input - packets that our IP received
+        output - packets that we sent
+        combined - both input and output packets order by time received
+        session_info - ip_in, ip_out, port_in, port_out is arr
+         - session_info[0] is ip_send
+         - session_info[1] is ip_rec
+         - session_info[2] is port_send
+         - session_info[3] is port_rec
+         - session_info[4] is protocol of usage
     """
 
-    # lock - no one will change us
-    # input - packets that our IP recived
-    # output - packters that we sent
-    # combined - both input and output packets order by time recieved
-    # session_info - ip_in, ip_out, port_in, port_out is arr
-    # - session_info[0] is ip_send
-    # - session_info[1] is ip_rec
-    # - session_info[2] is port_send
-    # - session_info[3] is port_rec
-    # - session_info[4] is protocol of usage
     def __init__(self, pkt, session_info, our_ip):
         self.our_ip = our_ip
         self.lock = threading.Lock()
@@ -45,11 +45,14 @@ class Session(object):
 
         self.combined = [(pkt, 0)]
         self.session_info = session_info
-        self.start_time = time.time()
+        self.start_time = pkt.time
         self.got_fin = False
 
-    # update the correct session
     def update_session(self, pkt):
+        """
+        add packet to session
+        :param pkt: packet to add
+        """
         time_now = pkt.time
 
         # check if lock available and check it
