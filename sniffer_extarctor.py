@@ -33,21 +33,22 @@ def get_lens_per_sec(packets):
     time_dif = packets[-1][1] - packets[0][1]
     return total / time_dif
 
-def get_max_delay(session, our_ip):
-	cnt_c = 0 
-	cnt_s = 0
-	curr = session.combined[0]
-	for i in xrange(1, len(cut_sessions)):
-		pkt_tuple = cnt_sessions[i]
-		prev = curr
-		curr = pkt_tuple
-		if(curr[1] - prev[1] > 1.3):
-			if(curr[0][IP].src == our_ip):
-				cnt_c += 1
-			else:
-				cnt_s += 1
 
-	return cnt_c, cnt_s
+def get_max_delay(session, our_ip):
+    cnt_c = 0
+    cnt_s = 0
+    curr = session.combined[0]
+    for i in xrange(1, len(session.combined)):
+        pkt_tuple = session.combined[i]
+        prev = curr
+        curr = pkt_tuple
+        if curr[1] - prev[1] > 1.3:
+            if curr[0][IP].src == our_ip:
+                cnt_c += 1
+            else:
+                cnt_s += 1
+
+    return cnt_c, cnt_s
 
 
 def is_client(_packet):
@@ -176,7 +177,7 @@ OTHER = ''
 OUT = ''
 
 
-def Yoni_Processes(input_dir, file):
+def get_features_pcap_file(input_dir, file, label):
     st = os.stat(input_dir + "/" + file)
     target = []
     if st.st_size > 30 * mega:
@@ -192,7 +193,7 @@ def data_gen(input_dir, label, output_file, save=True):
     with Pool(10) as pool:
         jobs = []
         for file in os.listdir(input_dir):
-            jobs.append(pool.apply_async(Yoni_Processes, (input_dir, file, label)))
+            jobs.append(pool.apply_async(get_features_pcap_file, (input_dir, file, label)))
         for job in jobs:
             result = job.get()
             if result:
