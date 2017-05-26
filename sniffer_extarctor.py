@@ -203,7 +203,7 @@ def data_gen(input_dir, label, output_file, save=True):
     df = DataFrame(data)
     if save:
         df.to_csv(output_file)
-    print "Done writting features"
+    print "Done writing features"
     return df
 
 
