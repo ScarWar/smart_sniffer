@@ -3,10 +3,10 @@ import threading
 import collections
 
 import sniffer_classifier
-from session_class import *
+from sessions import *
 from sniffer_classifier import *
 from sniffer_extarctor import *
-from session_class import lst
+from sessions import lst
 import socket
 import numpy as np
 

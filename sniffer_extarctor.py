@@ -1,7 +1,7 @@
 from scapy.all import *
 from pandas import DataFrame
 import sys
-from session_class import Session
+from sessions import Session
 from multiprocessing import Pool
 mega = 1024 ** 2
 

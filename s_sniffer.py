@@ -1,7 +1,7 @@
 import threading
 from scapy.all import *
-import session_class
-from session_class import lst
+import sessions
+from sessions import lst
 
 # FILE_LOGGER = "./Ssniffer_logger.log"
 key_func = lambda x: x[1]
@@ -53,7 +53,7 @@ class Sniffer(object):
         return self.sessions
 
     def set_session(self, packet, stemp, our_ip):
-        self.sessions[stemp] = session_class.Session(packet, stemp, our_ip)
+        self.sessions[stemp] = sessions.Session(packet, stemp, our_ip)
 
     def decide_stamp(self, three_tuple):
         if self.our_ip != str(three_tuple[0]):

@@ -32,40 +32,40 @@ class Session(object):
     # - session_info[2] is port_send
     # - session_info[3] is port_rec
     # - session_info[4] is protocol of usage
-    def __init__(self, packet, session_info, our_ip):
+    def __init__(self, pkt, session_info, our_ip):
         self.our_ip = our_ip
         self.lock = threading.Lock()
 
         if str(session_info[0]) == our_ip:
-            self.income = [(packet, 0)]
+            self.income = [(pkt, 0)]
             self.outcome = []
         else:
-            self.outcome = [(packet, 0)]
+            self.outcome = [(pkt, 0)]
             self.income = []
 
-        self.combined = [(packet, 0)]
+        self.combined = [(pkt, 0)]
         self.session_info = session_info
         self.start_time = time.time()
         self.got_fin = False
 
     # update the correct session
-    def update_session(self, packet):
-        time_now = time.time()
+    def update_session(self, pkt):
+        time_now = pkt.time
 
         # check if lock available and check it
         self.lock.acquire()
 
-        self.combined += [(packet, time_now - self.start_time)]
+        self.combined += [(pkt, time_now - self.start_time)]
 
-        if packet[IP].src == self.our_ip:
-            self.outcome += [(packet, time_now - self.start_time)]
+        if pkt[IP].src == self.our_ip:
+            self.outcome += [(pkt, time_now - self.start_time)]
         else:
-            self.income += [(packet, time_now - self.start_time)]
+            self.income += [(pkt, time_now - self.start_time)]
 
         # if we got fin ack we can send it to ML to detect if correct
         # this can be only in tcp
-        if TCP in packet:
-            self.got_fin = check_if_got_fin(packet)
+        if TCP in pkt:
+            self.got_fin = check_if_got_fin(pkt)
         else:
             self.got_fin = True
 
