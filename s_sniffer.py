@@ -1,5 +1,7 @@
 import threading
-from scapy.all import *
+
+import scapy.all as s
+
 import session
 from session import lst
 
@@ -8,23 +10,23 @@ key_func = lambda x: x[1]
 
 
 def make_stamp(pkt):
-    if IP in pkt:
-        ip_send = pkt[IP].src
-        ip_rec = pkt[IP].dst
+    if s.IP in pkt:
+        ip_send = pkt[s.IP].src
+        ip_rec = pkt[s.IP].dst
     else:
         return None
 
-    if TCP in pkt:
+    if s.TCP in pkt:
         # port_send = pkt[TCP].sport
         # port_rec = pkt[TCP].dport
         protocol = "TCP"
 
-    elif UDP in pkt:
+    elif s.UDP in pkt:
         # port_send = pkt[UDP].sport
         # port_rec = pkt[UDP].dport
         protocol = "UDP"
 
-    elif ICMP in pkt:
+    elif s.ICMP in pkt:
         # port_send = 1  # pkt[ICMP].sport
         # port_rec = 1  # pkt[ICMP].dport
         protocol = "ICMP"
@@ -64,14 +66,14 @@ class Sniffer(object):
 
     # This function will give us the next packet to check if correct
     def update_next_packet(self):
-        packet = sniff(count=1)  # filter = "tcp.len > 0",
+        packet = s.sniff(count=1)  # filter = "tcp.len > 0",
         packet = packet[0]
 
-        if IP not in packet:
+        if s.IP not in packet:
             return
 
-        ip_send = packet[IP].src
-        ip_rec = packet[IP].dst
+        ip_send = packet[s.IP].src
+        ip_rec = packet[s.IP].dst
 
         if ip_send != self.our_ip and ip_rec != self.our_ip:
             return

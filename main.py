@@ -1,14 +1,16 @@
-import s_sniffer
-import threading
-import collections
+import socket
 
+import s_sniffer
 import sniffer_classifier
 from session import *
-from sniffer_classifier import *
-from sniffer_extractor import *
 from session import lst
-import socket
-import numpy as np
+# from sniffer_classifier import *
+from sniffer_extractor import *
+
+
+# import threading
+# import collections
+# import numpy as np
 
 
 def get_my_ip():

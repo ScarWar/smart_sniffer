@@ -1,10 +1,11 @@
-from numpy import asarray
-
-from scapy.all import *
-from pandas import DataFrame
+import os
 import sys
-from session import Session
 from multiprocessing import Pool
+
+import scapy.all as s
+from pandas import DataFrame
+
+from session import Session
 
 MiB = 1 << 30
 
@@ -47,7 +48,7 @@ def get_max_delay(session, our_ip):
         curr = pkt_tuple
 
         if curr[1] - prev[1] > 1:
-            if curr[0][IP].src == our_ip:
+            if curr[0][s.IP].src == our_ip:
                 cnt_c += 1
             else:
                 cnt_s += 1
@@ -61,10 +62,10 @@ def is_client(_packet):
     :param _packet: 
     :return: source ip if client
     """
-    t = _packet[TCP]
+    t = _packet[s.TCP]
     if t.flags & 0x02 and not t.flags & 0x10:
         return True
-    tcp = _packet.getlayer(TCP)
+    tcp = _packet.getlayer(s.TCP)
     if tcp.sport > tcp.dport:  # if the sport is higher then likely it is the client
         return True
     return False
@@ -81,12 +82,12 @@ def get_delay_average(session, our_ip):
         pkt_tuple = session.combined[i]
         prev = curr
         curr = pkt_tuple
-        if prev[0][IP].src != our_ip and curr[0][IP].src == our_ip and i < len(session.combined) - 1:
+        if prev[0][s.IP].src != our_ip and curr[0][s.IP].src == our_ip and i < len(session.combined) - 1:
             i += 1  # to skip the
             pkt_tuple = session.combined[i]
             prev = curr
             curr = pkt_tuple
-            while prev[0][IP].src == our_ip and curr[0][IP].src == our_ip and i < len(session.combined) - 1:
+            while prev[0][s.IP].src == our_ip and curr[0][s.IP].src == our_ip and i < len(session.combined) - 1:
                 delay_sum_A += (curr[1] - prev[1])
                 i += 1
                 pkt_tuple = session.combined[i]
@@ -110,19 +111,19 @@ def cap_session(pcap_path):
     curr_session = None
     session_info = [0, ] * 3
     for pkt in capture:
-        if not pkt.haslayer(TCP) and not pkt.haslayer(IP) and pkt.len <= 0:
+        if not pkt.haslayer(s.TCP) and not pkt.haslayer(s.IP) and pkt.len <= 0:
             continue
 
         if first:
             first = False
             if is_client(pkt):
-                session_info[0] = pkt[IP].src
-                session_info[1] = pkt[IP].dst
+                session_info[0] = pkt[s.IP].src
+                session_info[1] = pkt[s.IP].dst
                 session_info[2] = "TCP"
                 curr_session = Session(pkt, session_info, session_info[0])
             else:
-                session_info[0] = pkt[IP].dst
-                session_info[1] = pkt[IP].src
+                session_info[0] = pkt[s.IP].dst
+                session_info[1] = pkt[s.IP].src
                 session_info[2] = "TCP"
                 curr_session = Session(pkt, session_info, session_info[0])
         else:

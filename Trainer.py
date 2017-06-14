@@ -1,11 +1,12 @@
-import numpy as np
+# import numpy as np
 import pandas
-from pandas import DataFrame as df
+from sklearn.ensemble import ExtraTreesClassifier, RandomForestClassifier
+from sklearn.svm import NuSVC, SVC
+# from pandas import DataFrame as df
 from sklearn.tree import DecisionTreeClassifier
 
-import sniffer_extractor, sniffer_classifier
-from sklearn.svm import NuSVC, SVC
-from sklearn.ensemble import ExtraTreesClassifier, RandomForestClassifier, AdaBoostClassifier
+import sniffer_classifier
+import sniffer_extractor
 
 # bad = df.from_csv('bad_data_v1')
 # good = df.from_csv('good_data_v1')

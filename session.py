@@ -1,5 +1,6 @@
-from scapy.all import *
 import threading
+
+import scapy.all as s
 
 lst = dict()
 
@@ -60,14 +61,14 @@ class Session(object):
 
         self.combined += [(pkt, time_now - self.start_time)]
 
-        if pkt[IP].src == self.our_ip:
+        if pkt[s.IP].src == self.our_ip:
             self.outcome += [(pkt, time_now - self.start_time)]
         else:
             self.income += [(pkt, time_now - self.start_time)]
 
         # if we got fin ack we can send it to ML to detect if correct
         # this can be only in tcp
-        if TCP in pkt:
+        if s.TCP in pkt:
             self.got_fin = check_if_got_fin(pkt)
         else:
             self.got_fin = True
