@@ -106,7 +106,7 @@ def get_delay_average(session, our_ip):
 
 
 def cap_session(pcap_path):
-    capture = rdpcap(pcap_path)  # TODO when go live change to session capture
+    capture = s.rdpcap(pcap_path)  # TODO when go live change to session capture
     first = True
     curr_session = None
     session_info = [0, ] * 3
